@@ -1,76 +1,52 @@
 return {
-  -- See `:help gitsigns` to understand what the configuration keys do
-  -- Adds git related signs to the gutter, as well as utilities for managing changes
-  {
-    'lewis6991/gitsigns.nvim',
-    opts = {
-      signs = {
-        add = { text = '+' },
-        change = { text = '~' },
-        delete = { text = '_' },
-        topdelete = { text = '‾' },
-        changedelete = { text = '~' },
-      },
-      on_attach = function(bufnr)
-        local gs = package.loaded.gitsigns
+  'lewis6991/gitsigns.nvim',
 
-        local function map(mode, l, r, opts)
-          opts = opts or {}
-          opts.buffer = bufnr
-          vim.keymap.set(mode, l, r, opts)
-        end
+  event = { "BufReadPre", "BufNewFile" },
 
-        -- Navigation
-        map({ 'n', 'v' }, ']c', function()
-          if vim.wo.diff then
-            return ']c'
-          end
-          vim.schedule(function()
-            gs.next_hunk()
-          end)
-          return '<Ignore>'
-        end, { expr = true, desc = 'Jump to next hunk' })
+  init = function()
+    local ok, wk = pcall(require, "which-key")
+    if ok then
+      wk.add({
+          { "<leader>g", group = "[g]it ..." },
+      })
+    end
+  end,
 
-        map({ 'n', 'v' }, '[c', function()
-          if vim.wo.diff then
-            return '[c'
-          end
-          vim.schedule(function()
-            gs.prev_hunk()
-          end)
-          return '<Ignore>'
-        end, { expr = true, desc = 'Jump to previous hunk' })
+  keys = {
+    { "]h",         "<cmd>Gitsigns next_hunk<CR>",                 mode = { "n", "v" }, desc = "Git: jump to next [h]unk" },
+    { "[h",         "<cmd>Gitsigns prev_hunk<CR>",                 mode = { "n", "v" }, desc = "Git: jump to previous [h]unk" },
+    { "<leader>gs", "<cmd>Gitsigns stage_hunk<CR>",                mode = { "n" },      desc = "Git: [s]tage hunk" },
+    { "<leader>gs", function()
+      require("gitsigns").stage_hunk({ vim.fn.line('.'), vim.fn.line('v') })
+    end,                                                           mode = { "v" },      desc = "Git: [s]tage hunk" },
+    { "<leader>gS", "<cmd>Gitsigns stage_buffer<CR>",              mode = { "n" },      desc = "Git: [S]tage buffer" },
+    { "<leader>gr", "<cmd>Gitsigns reset_hunk<CR>",                mode = { "n" },      desc = "Git: [r]eset hunk" },
+    { "<leader>gr", function()
+      require("gitsigns").reset_hunk({ vim.fn.line('.'), vim.fn.line('v') })
+    end,                                                           mode = { "v" },      desc = "Git: [r]eset hunk" },
+    { "<leader>gR", "<cmd>Gitsigns reset_buffer<CR>",              mode = { "n" },      desc = "Git: [R]eset buffer" },
+    { "<leader>gu", "<cmd>Gitsigns undo_stage_hunk<CR>",           mode = { "n", "v" }, desc = "Git: [u]nstage hunk" },
+    { "<leader>gp", "<cmd>Gitsigns preview_hunk<CR>",              mode = { "n", "v" }, desc = "Git: [p]review hunk" },
+    { "<leader>gb", "<cmd>Gitsigns blame_line<CR>",                mode = { "n", "v" }, desc = "Git: [b]lame line" },
+    { "<leader>gd", "<cmd>Gitsigns diffthis<CR>",                  mode = { "n", "v" }, desc = "Git: [d]iff against index" },
+    { "<leader>gD", "<cmd>Gitsigns diffthis '~'<CR>",              mode = { "n", "v" }, desc = "Git: [D]iff against last commit" },
+    { "<leader>gt", "<cmd>Gitsigns toggle_current_line_blame<CR>", mode = { "n" },      desc = "Git: [t]oggle blame lines" },
+    { "<leader>gx", "<cmd>Gitsigns toggle_deleted<CR>",            mode = { "n" },      desc = "Git: toggle show deleted" },
+    { "ih",         ":<C-U>Gitsigns select_hunk<CR>",              mode = { "o", "x" }, desc = "Git: Select [i]nner hunk" },
+    { "ah",         ":<C-U>Gitsigns select_hunk<CR>",              mode = { "o", "x" }, desc = "Git: Select [a]round hunk" },
+  },
 
-        -- Actions
-        -- visual mode
-        map('v', '<leader>gs', function()
-          gs.stage_hunk { vim.fn.line '.', vim.fn.line 'v' }
-        end, { desc = 'stage git hunk' })
-        map('v', '<leader>gr', function()
-          gs.reset_hunk { vim.fn.line '.', vim.fn.line 'v' }
-        end, { desc = 'reset git hunk' })
-        -- normal mode
-        map('n', '<leader>gs', gs.stage_hunk, { desc = 'Git [s]tage hunk' })
-        map('n', '<leader>gr', gs.reset_hunk, { desc = 'Git [r]eset hunk' })
-        map('n', '<leader>gS', gs.stage_buffer, { desc = 'Git [S]tage buffer' })
-        map('n', '<leader>gR', gs.reset_buffer, { desc = 'Git [R]eset buffer' })
-        map('n', '<leader>gu', gs.undo_stage_hunk, { desc = '[u]ndo stage hunk' })
-        map('n', '<leader>gp', gs.preview_hunk, { desc = '[p]review git hunk' })
-        map('n', '<leader>gb', function()
-          gs.blame_line { full = false }
-        end, { desc = 'git [b]lame line' })
-        map('n', '<leader>gd', gs.diffthis, { desc = 'git [d]iff against index' })
-        map('n', '<leader>gD', function()
-          gs.diffthis '~'
-        end, { desc = 'git [D]iff against last commit' })
-
-        -- Toggles
-        map('n', '<leader>gt', gs.toggle_current_line_blame, { desc = '[t]oggle git blame line' })
-        map('n', '<leader>gx', gs.toggle_deleted, { desc = 'toggle git show deleted' })
-
-        -- Text object
-        map({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>', { desc = 'select git hunk' })
-      end,
+  opts = {
+    signs = {
+      add = { text = '+' },
+      change = { text = '~' },
+      delete = { text = '_' },
+      topdelete = { text = '‾' },
+      changedelete = { text = '~' },
+      untracked = { text = '|' }
+    },
+    preview_config = {
+      border = "rounded",
     },
   },
 }
