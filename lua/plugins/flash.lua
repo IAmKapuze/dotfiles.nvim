@@ -9,7 +9,7 @@ return {
       char = {
         highlight = { backdrop = false },
         search = { wrap = true },
-        jump_labels = true,
+        jump_labels = true,  -- TODO Breaks arrows on f search
       },
     },
   },
