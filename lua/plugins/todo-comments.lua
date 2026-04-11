@@ -38,7 +38,9 @@ return {
       TFS = { color = "hint" },
     },
     highlight = {
-      pattern = [[.*<(KEYWORDS)\s*]],
+      -- Dot at end of pattern as temp workaround for:
+      -- https://github.com/folke/todo-comments.nvim/issues/380
+      pattern = [[.*<(KEYWORDS).]],
       before = "fg",
       keyword = "wide_fg",
       after = "fg",
