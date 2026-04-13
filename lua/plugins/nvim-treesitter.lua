@@ -1,26 +1,12 @@
 return {
-  -- TODO switch to main (new version)
   'nvim-treesitter/nvim-treesitter',
-  branch = 'master',
+  branch = 'main',
   dependencies = {
     'nvim-treesitter/nvim-treesitter-textobjects',
   },
   lazy = false,
   build = ':TSUpdate',
   opts = {
-    ensure_installed = {
-      'bash', 'c', 'cmake', 'cpp', 'css', 'diff', 'dockerfile', 'html',
-      'javascript', 'json', 'lua', 'luadoc', 'make', 'markdown', 'python',
-      'regex', 'rust', 'sql', 'tmux', 'toml', 'vim', 'vimdoc', 'vue', 'yaml',
-    },
-    auto_install = true,
-    highlight = {
-      enable = true,
-      additional_vim_regex_highlighting = false,
-    },
-    indent = {
-      enable = true,
-    },
     textobjects = {
       select = {
         enable = true,
@@ -33,8 +19,27 @@ return {
     },
   },
   config = function(_, opts)
-    require('nvim-treesitter.configs').setup(opts)
+    require('nvim-treesitter').setup(opts)
     require('nvim-treesitter-textobjects').setup(opts.textobjects)
+
+    require('nvim-treesitter').install({
+      'bash', 'c', 'cmake', 'cpp', 'css', 'diff', 'dockerfile', 'html',
+      'javascript', 'json', 'lua', 'luadoc', 'make', 'markdown', 'python',
+      'regex', 'rust', 'sql', 'tmux', 'toml', 'vim', 'vimdoc', 'vue', 'yaml',
+    })
+
+    vim.api.nvim_create_autocmd('FileType', {
+      callback = function(args)
+        local language = vim.treesitter.language.get_lang(args.match)
+
+        if not language or not vim.treesitter.language.add(language) then
+          return
+        end
+
+        vim.treesitter.start()
+        vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+      end,
+    })
 
     local function textobjects_keymap(action, keymap, module, query)
       local modes
